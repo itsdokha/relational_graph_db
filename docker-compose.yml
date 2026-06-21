@@ -1,0 +1,64 @@
+# =====================================================================
+#  Запуск обеих БД одной командой:  docker compose up
+#
+#   - postgres  : реляционная БД, автоматически выполняет relational/init/*.sql
+#                 (схема + данные) при первом старте.        порт 5432
+#   - neo4j     : графовая БД с веб-браузером.               порт 7474 (UI), 7687 (bolt)
+#   - neo4j-init: одноразовый контейнер, который заливает
+#                 граф (constraints + данные) после старта neo4j.
+#
+#  Доступы:
+#   Postgres -> host=localhost port=5432 db=movies user=movies pass=movies
+#   Neo4j    -> http://localhost:7474   user=neo4j  pass=moviesmovies
+# =====================================================================
+services:
+  postgres:
+    image: postgres:16
+    container_name: movies_pg
+    environment:
+      POSTGRES_USER: movies
+      POSTGRES_PASSWORD: movies
+      POSTGRES_DB: movies
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./relational/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U movies -d movies"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  neo4j:
+    image: neo4j:5
+    container_name: movies_neo4j
+    environment:
+      NEO4J_AUTH: neo4j/moviesmovies
+    ports:
+      - "7474:7474"   # веб-браузер Neo4j
+      - "7687:7687"   # bolt-протокол
+    volumes:
+      - ./graph:/cypher:ro
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p moviesmovies 'RETURN 1' || exit 1"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+
+  neo4j-init:
+    image: neo4j:5
+    container_name: movies_neo4j_init
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    volumes:
+      - ./graph:/cypher:ro
+    restart: "no"
+    entrypoint:
+      - /bin/bash
+      - -c
+      - >
+        echo 'Загружаю граф в Neo4j...' &&
+        cat /cypher/01_constraints.cypher /cypher/02_data.cypher |
+        cypher-shell -a bolt://neo4j:7687 -u neo4j -p moviesmovies &&
+        echo 'Граф загружен.'

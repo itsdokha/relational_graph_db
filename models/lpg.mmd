@@ -1,0 +1,11 @@
+%% Labeled Property Graph (LPG) для графовой БД Neo4j.
+%% Метки вершин (Person/Movie/Genre) и типы рёбер с их свойствами.
+%% Это «схема» графа; конкретные данные — в graph/02_data.cypher.
+flowchart LR
+    P["(:Person)<br/>person_id, full_name,<br/>birth_year, country"]
+    M["(:Movie)<br/>movie_id, title,<br/>release_year, rating, duration_min"]
+    G["(:Genre)<br/>genre_id, name"]
+
+    P -- "ACTED_IN { character }" --> M
+    P -- "DIRECTED" --> M
+    M -- "HAS_GENRE" --> G

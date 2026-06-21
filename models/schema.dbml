@@ -1,0 +1,67 @@
+// =====================================================================
+//  ER-диаграмма "Кинобаза" в нотации DBML (Database Markup Language)
+//  Вставьте этот текст на https://dbdiagram.io/d чтобы получить картинку.
+//
+//  Все связи M:N нормализованы через ассоциативные таблицы (role,
+//  direction, movie_genre), поэтому остаются только связи вида 1:M.
+// =====================================================================
+
+Table Person {
+  person_id  integer      [pk, not null, unique]
+  full_name  varchar      [not null]
+  birth_year integer
+  country    varchar
+}
+
+Table Movie {
+  movie_id     integer    [pk, not null, unique]
+  title        varchar    [not null]
+  release_year integer
+  rating       decimal
+  duration_min integer
+}
+
+Table Genre {
+  genre_id integer        [pk, not null, unique]
+  name     varchar        [not null, unique]
+}
+
+// Ассоциативная таблица ACTED_IN (актёр сыграл роль в фильме)
+Table Role {
+  role_id        integer  [pk, not null, unique]
+  person_id      integer  [not null]
+  movie_id       integer  [not null]
+  character_name varchar
+
+  Indexes {
+    (person_id, movie_id, character_name) [unique]
+  }
+}
+
+// Ассоциативная таблица DIRECTED (режиссёр снял фильм)
+Table Direction {
+  person_id integer       [not null]
+  movie_id  integer       [not null]
+
+  Indexes {
+    (person_id, movie_id) [pk]
+  }
+}
+
+// Ассоциативная таблица HAS_GENRE (фильм относится к жанру)
+Table MovieGenre {
+  movie_id integer        [not null]
+  genre_id integer        [not null]
+
+  Indexes {
+    (movie_id, genre_id)  [pk]
+  }
+}
+
+// --- Связи (все 1:M) ---
+Ref: Person.person_id  < Role.person_id
+Ref: Movie.movie_id    < Role.movie_id
+Ref: Person.person_id  < Direction.person_id
+Ref: Movie.movie_id    < Direction.movie_id
+Ref: Movie.movie_id    < MovieGenre.movie_id
+Ref: Genre.genre_id    < MovieGenre.genre_id

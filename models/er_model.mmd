@@ -1,0 +1,43 @@
+%% Модель сущностных отношений (Entity-Relationship).
+%% Показаны связи M:N до нормализации — концептуальный взгляд
+%% в духе нотации Бахмана/IDEF1X (сущности и кратности связей).
+%% Реализация после нормализации — в models/schema.dbml.
+erDiagram
+    PERSON ||--o{ ROLE        : "играет (ACTED_IN)"
+    MOVIE  ||--o{ ROLE        : "содержит роль"
+    PERSON ||--o{ DIRECTION   : "режиссирует (DIRECTED)"
+    MOVIE  ||--o{ DIRECTION   : "снят кем-то"
+    MOVIE  ||--o{ MOVIE_GENRE : "имеет жанр (HAS_GENRE)"
+    GENRE  ||--o{ MOVIE_GENRE : "относит фильм"
+
+    PERSON {
+        int     person_id PK
+        varchar full_name
+        int     birth_year
+        varchar country
+    }
+    MOVIE {
+        int     movie_id PK
+        varchar title
+        int     release_year
+        decimal rating
+        int     duration_min
+    }
+    GENRE {
+        int     genre_id PK
+        varchar name
+    }
+    ROLE {
+        int     role_id PK
+        int     person_id FK
+        int     movie_id FK
+        varchar character_name
+    }
+    DIRECTION {
+        int person_id FK
+        int movie_id FK
+    }
+    MOVIE_GENRE {
+        int movie_id FK
+        int genre_id FK
+    }
